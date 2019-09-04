@@ -4,6 +4,7 @@
   "description": "",
   "scripts": {
     "test": "jest",
+    "test-with-output-file": "jest --json --outputFile=output.json",
     "check-format": "standard --env jest",
     "reformat": "standard --env jest --fix"
   },

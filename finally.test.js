@@ -8,11 +8,11 @@ describe('SynchronousPromise', () => {
       new SynchronousPromise((resolve, reject) => {
         events.push('init')
         resolve('resolve')
-      }).then(result => { events.push(result) })
+      }).then(result => { events.push(`result: ${result}`) })
         .then(() => { events.push('then') })
 
       expect(events)
-        .toEqual(['init', 'resolve', 'then'])
+        .toEqual(['init', 'result: resolve', 'then'])
     })
 
     it('calls .catch() but not previous .then()s after being rejected', () => {
@@ -34,12 +34,12 @@ describe('SynchronousPromise', () => {
 
       new SynchronousPromise((resolve, reject) => {
         resolve('init')
-      }).then(result => { events.push(result) })
+      }).then(result => { events.push(`result: ${result}`) })
         .then(() => { events.push('then') })
         .finally(() => { events.push('finally') })
 
       expect(events)
-        .toEqual(['init', 'then', 'finally'])
+        .toEqual(['result: init', 'then', 'finally'])
     })
 
     it('calls .finally() after .catch()', () => {
@@ -47,7 +47,7 @@ describe('SynchronousPromise', () => {
 
       new SynchronousPromise((resolve, reject) => {
         reject('init')
-      }).then(result => { events.push(result) })
+      }).then(result => { events.push(`result: ${result}`) })
         .then(() => { events.push('then') })
         .catch(error => { events.push(`error: ${error}`) })
         .finally(() => { events.push('finally') })
@@ -63,7 +63,7 @@ describe('SynchronousPromise', () => {
         const events = []
 
         SynchronousPromise.unresolved()
-          .then((result) => events.push(result))
+          .then((result) => { events.push(`result: ${result}`) })
           .then(() => { events.push('then') })
 
         expect(events).toEqual([])
@@ -73,11 +73,11 @@ describe('SynchronousPromise', () => {
         const events = []
 
         const promise = SynchronousPromise.unresolved()
-          .then((result) => events.push(result))
+          .then((result) => { events.push(`result: ${result}`) })
           .then(() => { events.push('then') })
         promise.resolve('resolve')
 
-        expect(events).toEqual(['resolve', 'then'])
+        expect(events).toEqual(['result: resolve', 'then'])
       })
     })
 
@@ -85,7 +85,7 @@ describe('SynchronousPromise', () => {
       const events = []
 
       const promise = SynchronousPromise.unresolved()
-        .then((result) => events.push(result))
+        .then((result) => { events.push(`result: ${result}`) })
         .then(() => { events.push('then') })
         .catch(error => { events.push(`error: ${error}`) })
       promise.reject('reject')
@@ -99,23 +99,46 @@ describe('SynchronousPromise', () => {
         const events = []
 
         SynchronousPromise.unresolved()
-          .then((result) => events.push(result))
+          .then((result) => { events.push(`result: ${result}`) })
           .then(() => { events.push('then') })
           .finally(() => { events.push('finally') })
 
         expect(events).toEqual([])
+        /* Result:
+        - Expected
+        + Received
+
+        - Array []
+        + Array [
+        +   "finally",
+        +   "result: undefined",
+        +   "then",
+        + ]
+        */
       })
 
       it('calls .then() and .finally() once promise.resolve is called', () => {
         const events = []
 
         const promise = SynchronousPromise.unresolved()
-          .then((result) => events.push(result))
+          .then((result) => { events.push(`result: ${result}`) })
           .then(() => { events.push('then') })
           .finally(() => { events.push('finally') })
         promise.resolve('resolve')
 
-        expect(events).toEqual(['resolve', 'then', 'finally'])
+        expect(events).toEqual(['result: resolve', 'then', 'finally'])
+        /* Result:
+        - Expected
+        + Received
+
+          Array [
+        -   "result: resolve",
+        -   "then",
+            "finally",
+        +   "result: undefined",
+        +   "then",
+          ]
+        */
       })
     })
 
@@ -124,23 +147,209 @@ describe('SynchronousPromise', () => {
         const events = []
 
         SynchronousPromise.unresolved()
-          .then((result) => events.push(result))
+          .then((result) => { events.push(`result: ${result}`) })
           .catch(() => { events.push('catch') })
           .finally(() => { events.push('finally') })
 
         expect(events).toEqual([])
+        /* Result:
+        - Expected
+        + Received
+
+        - Array []
+        + Array [
+        +   "finally",
+        +   "result: undefined",
+        + ]
+        */
       })
 
       it('calls .catch() and .finally() once promise.reject is called', () => {
         const events = []
 
         const promise = SynchronousPromise.unresolved()
-          .then((result) => events.push(result))
-          .catch(() => { events.push('catch') })
+          .then((result) => { events.push(`result: ${result}`) })
+          .catch((error) => { events.push(`error: ${error}`) })
           .finally(() => { events.push('finally') })
         promise.reject('reject')
 
-        expect(events).toEqual(['catch', 'finally'])
+        expect(events).toEqual(['error: reject', 'finally'])
+        /* Result:
+        - Expected
+        + Received
+
+          Array [
+        -   "error: reject",
+            "finally",
+        +   "result: undefined",
+          ]
+        */
+      })
+    })
+  })
+
+  describe('SynchronousPromise.resolve(...).pause', () => {
+    describe('calls .then() only after being resolved', () => {
+      it('calls nothing after the inital initialization before promise.resume is called', () => {
+        const events = []
+
+        SynchronousPromise.resolve('init')
+          .then((result) => { events.push(`result: ${result}`) })
+          .pause()
+          .then(() => { events.push('resumed') })
+
+        expect(events)
+          .toEqual(['result: init'])
+      })
+
+      it('calls .then() after the inital initialization after promise.resume is called', () => {
+        const events = []
+
+        const promise = SynchronousPromise.resolve('init')
+          .then((result) => { events.push(`result: ${result}`) })
+          .pause()
+          .then(() => { events.push('resumed') })
+        promise.resume()
+
+        expect(events)
+          .toEqual(['result: init', 'resumed'])
+      })
+    })
+
+    describe('calls .catch() only after being resolved', () => {
+      it('calls nothing after the inital initialization before promise.resume is called', () => {
+        const events = []
+
+        SynchronousPromise.resolve('init')
+          .then((result) => {
+            events.push(`result: ${result}`)
+            throw Error('resumed')
+          })
+          .pause()
+          .catch(({ message }) => { events.push(`catch: ${message}`) })
+
+        expect(events)
+          .toEqual(['result: init'])
+      })
+
+      it('calls .catch() after the inital initialization after promise.resume is called', () => {
+        const events = []
+
+        const promise = SynchronousPromise.resolve('init')
+          .then((result) => {
+            events.push(`result: ${result}`)
+            throw Error('resumed')
+          })
+          .pause()
+          .catch(({ message }) => { events.push(`catch: ${message}`) })
+        promise.resume()
+
+        expect(events)
+          .toEqual(['result: init', 'catch: resumed'])
+      })
+    })
+
+    describe('calls .finally() after .then()', () => {
+      it('calls nothing before promise.resume is called', () => {
+        const events = []
+
+        SynchronousPromise.resolve('init')
+          .then((result) => { events.push(`result: ${result}`) })
+          .pause()
+          .then(() => { events.push('resumed') })
+          .finally(() => { events.push('finally') })
+
+        expect(events)
+          .toEqual(['result: init'])
+        /* Result:
+        - Expected
+        + Received
+
+          Array [
+            "result: init",
+        +   "finally",
+          ]
+        */
+      })
+
+      it('calls .then() and .finally() once promise.resume is called', () => {
+        const events = []
+
+        const promise = SynchronousPromise.resolve('init')
+          .then((result) => { events.push(`result: ${result}`) })
+          .pause()
+          .then(() => { events.push('resumed') })
+          .finally(() => { events.push('finally') })
+        promise.resume()
+
+        expect(events)
+          .toEqual(['result: init', 'resumed', 'finally'])
+        /* Result:
+        - Expected
+        + Received
+
+          Array [
+            "result: init",
+        -   "resumed",
+            "finally",
+        +   "resumed",
+          ]
+        */
+      })
+    })
+
+    describe('calls .finally() after .catch()', () => {
+      it('calls nothing before promise.resume is called', () => {
+        const events = []
+
+        SynchronousPromise.resolve('init')
+          .then((result) => {
+            events.push(`result: ${result}`)
+            throw Error('resumed')
+          })
+          .pause()
+          .catch(({ message }) => { events.push(`catch: ${message}`) })
+          .finally(() => { events.push('finally') })
+
+        expect(events)
+          .toEqual(['result: init'])
+        /* Result:
+        - Expected
+        + Received
+
+          Array [
+            "result: init",
+        +   "finally",
+          ]
+        */
+      })
+
+      it('calls .catch() and .finally() once promise.resume is called', () => {
+        const events = []
+
+        const promise = SynchronousPromise.resolve('init')
+          .then((result) => {
+            events.push(`result: ${result}`)
+            throw Error('resumed')
+          })
+          .pause()
+          .catch(({ message }) => { events.push(`catch: ${message}`) })
+          .finally(() => { events.push('finally') })
+        promise.resume()
+
+        expect(events)
+          .toEqual(['result: init', 'catch: resumed', 'finally'])
+        /* Result:
+        - Expected
+        + Received
+
+          Array [
+            "result: init",
+        -   "catch: resumed",
+            "finally",
+        +   "catch: resumed",
+          ]
+        */
       })
     })
   })
