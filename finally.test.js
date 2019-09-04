@@ -103,18 +103,10 @@ describe('SynchronousPromise', () => {
           .then(() => { events.push('then') })
           .finally(() => { events.push('finally') })
 
-        expect(events).toEqual([])
-        /* Result:
-        - Expected
-        + Received
-
-        - Array []
-        + Array [
-        +   "finally",
-        +   "result: undefined",
-        +   "then",
-        + ]
-        */
+        expect(events)
+          .not.toContain('finally')
+        expect(events)
+          .toEqual([])
       })
 
       it('calls .then() and .finally() once promise.resolve is called', () => {
@@ -126,19 +118,10 @@ describe('SynchronousPromise', () => {
           .finally(() => { events.push('finally') })
         promise.resolve('resolve')
 
-        expect(events).toEqual(['result: resolve', 'then', 'finally'])
-        /* Result:
-        - Expected
-        + Received
-
-          Array [
-        -   "result: resolve",
-        -   "then",
-            "finally",
-        +   "result: undefined",
-        +   "then",
-          ]
-        */
+        expect(events)
+          .not.toEqual(['finally', 'result: undefined', 'then'])
+        expect(events)
+          .toEqual(['result: resolve', 'then', 'finally'])
       })
     })
 
@@ -151,17 +134,10 @@ describe('SynchronousPromise', () => {
           .catch(() => { events.push('catch') })
           .finally(() => { events.push('finally') })
 
-        expect(events).toEqual([])
-        /* Result:
-        - Expected
-        + Received
-
-        - Array []
-        + Array [
-        +   "finally",
-        +   "result: undefined",
-        + ]
-        */
+        expect(events)
+          .not.toContain('finally')
+        expect(events)
+          .toEqual([])
       })
 
       it('calls .catch() and .finally() once promise.reject is called', () => {
@@ -173,17 +149,10 @@ describe('SynchronousPromise', () => {
           .finally(() => { events.push('finally') })
         promise.reject('reject')
 
-        expect(events).toEqual(['error: reject', 'finally'])
-        /* Result:
-        - Expected
-        + Received
-
-          Array [
-        -   "error: reject",
-            "finally",
-        +   "result: undefined",
-          ]
-        */
+        expect(events)
+          .not.toEqual(['finally', 'result: undefined'])
+        expect(events)
+          .toEqual(['error: reject', 'finally'])
       })
     })
   })
@@ -260,16 +229,9 @@ describe('SynchronousPromise', () => {
           .finally(() => { events.push('finally') })
 
         expect(events)
+          .not.toContain('finally')
+        expect(events)
           .toEqual(['result: init'])
-        /* Result:
-        - Expected
-        + Received
-
-          Array [
-            "result: init",
-        +   "finally",
-          ]
-        */
       })
 
       it('calls .then() and .finally() once promise.resume is called', () => {
@@ -283,18 +245,9 @@ describe('SynchronousPromise', () => {
         promise.resume()
 
         expect(events)
+          .not.toEqual(['result: init', 'finally', 'resumed'])
+        expect(events)
           .toEqual(['result: init', 'resumed', 'finally'])
-        /* Result:
-        - Expected
-        + Received
-
-          Array [
-            "result: init",
-        -   "resumed",
-            "finally",
-        +   "resumed",
-          ]
-        */
       })
     })
 
@@ -312,16 +265,9 @@ describe('SynchronousPromise', () => {
           .finally(() => { events.push('finally') })
 
         expect(events)
+          .not.toContain('finally')
+        expect(events)
           .toEqual(['result: init'])
-        /* Result:
-        - Expected
-        + Received
-
-          Array [
-            "result: init",
-        +   "finally",
-          ]
-        */
       })
 
       it('calls .catch() and .finally() once promise.resume is called', () => {
@@ -338,18 +284,9 @@ describe('SynchronousPromise', () => {
         promise.resume()
 
         expect(events)
+          .not.toEqual(['result: init', 'finally', 'catch: resumed'])
+        expect(events)
           .toEqual(['result: init', 'catch: resumed', 'finally'])
-        /* Result:
-        - Expected
-        + Received
-
-          Array [
-            "result: init",
-        -   "catch: resumed",
-            "finally",
-        +   "catch: resumed",
-          ]
-        */
       })
     })
   })
