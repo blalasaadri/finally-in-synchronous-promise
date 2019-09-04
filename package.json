@@ -1,0 +1,19 @@
+{
+  "name": "finally-in-synchronous-promise",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "test": "jest",
+    "check-format": "standard --env jest",
+    "reformat": "standard --env jest --fix"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "synchronous-promise": "^2.0.9"
+  },
+  "devDependencies": {
+    "jest": "^24.9.0",
+    "standard": "^14.1.0"
+  }
+}
